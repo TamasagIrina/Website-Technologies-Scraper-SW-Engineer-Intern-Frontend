@@ -1,0 +1,140 @@
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-text">Detector</span>
+      </div>
+      <p class="logo-sub">Identifică tehnologiile folosite pe orice website</p>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- INPUT CARD -->
+    <div class="card input-card">
+      <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'text'" (click)="activeTab = 'text'">
+           Text
+        </button>
+        <button class="tab" [class.active]="activeTab === 'file'" (click)="activeTab = 'file'">
+           Fișier.txt
+        </button>
+      </div>
+
+      <!-- TEXT TAB -->
+      <div *ngIf="activeTab === 'text'" class="tab-content">
+        <label class="input-label">Introdu domenii (unul pe linie)</label>
+        <textarea
+          class="textarea"
+          [(ngModel)]="textInput"
+          placeholder="exemplu.com&#10;shopify.com&#10;wordpress.org"
+          rows="6">
+        </textarea>
+      </div>
+
+      <!-- FILE TAB -->
+      <div *ngIf="activeTab === 'file'" class="tab-content">
+        <label class="input-label">Încarcă fișier .txt cu domenii</label>
+        <div class="file-drop" (click)="fileInput.click()">
+          <span class="file-icon">📂</span>
+          <span *ngIf="!selectedFile">Click pentru a selecta fișierul</span>
+          <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+          <input #fileInput type="file" accept=".txt" (change)="onFileSelected($event)" hidden>
+        </div>
+      </div>
+
+      <div *ngIf="errorMsg" class="error-msg">⚠️ {{ errorMsg }}</div>
+
+      <button class="btn-analyze" (click)="analyze()" [disabled]="loading">
+        <span *ngIf="!loading">Analizează</span>
+        <span *ngIf="loading" class="loading-text">
+          <span class="spinner"></span> Se analizează...
+        </span>
+      </button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" *ngIf="results.length > 0">
+      <div class="stat-card">
+        <span class="stat-num">{{ results.length }}</span>
+        <span class="stat-label">Domenii</span>
+      </div>
+      <div class="stat-card success">
+        <span class="stat-num">{{ successCount }}</span>
+        <span class="stat-label">Succes</span>
+      </div>
+      <div class="stat-card error">
+        <span class="stat-num">{{ errorCount }}</span>
+        <span class="stat-label">Erori</span>
+      </div>
+      <div class="stat-card tech">
+        <span class="stat-num">{{ totalTechs }}</span>
+        <span class="stat-label">Tehnologii</span>
+      </div>
+    </div>
+
+    <!-- FILTERS + EXPORT -->
+    <div class="filters-row" *ngIf="results.length > 0">
+      <input class="search-input" [(ngModel)]="searchTerm" placeholder="Caută domeniu...">
+      <div class="filter-btns">
+        <button class="filter-btn" [class.active]="filterStatus==='all'" (click)="filterStatus='all'">Toate</button>
+        <button class="filter-btn success" [class.active]="filterStatus==='success'" (click)="filterStatus='success'">Succes</button>
+        <button class="filter-btn error" [class.active]="filterStatus==='error'" (click)="filterStatus='error'">Erori</button>
+      </div>
+      <button class="btn-export" (click)="exportJSON()">⬇️ Export JSON</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" *ngIf="filteredResults.length > 0">
+      <div class="result-card" *ngFor="let r of filteredResults" [class.error-card]="r.status === 'error'">
+
+        <!-- RESULT HEADER -->
+        <div class="result-header" (click)="toggleExpand(r.domain)">
+          <div class="result-left">
+            <span class="status-dot" [class.green]="r.status==='success'" [class.red]="r.status==='error'"></span>
+            <span class="domain-name">{{ r.domain }}</span>
+            <span class="tech-count" *ngIf="r.status === 'success'">
+              {{ r.technologies.length }} tehnologii
+            </span>
+          </div>
+          <div class="result-right">
+            <span class="expand-icon">{{ expandedDomain === r.domain ? '▲' : '▼' }}</span>
+          </div>
+        </div>
+
+        <!-- ERROR MESSAGE -->
+        <div *ngIf="r.status === 'error'" class="error-detail">
+          {{ r.errorMessage }}
+        </div>
+
+        <!-- TECHNOLOGIES -->
+        <div *ngIf="expandedDomain === r.domain && r.status === 'success'" class="tech-list">
+          <div class="tech-item" *ngFor="let t of r.technologies">
+            <div class="tech-top">
+              <span class="tech-badge" >
+                {{ t.category }}
+              </span>
+              <span class="tech-name">{{ t.name }}</span>
+              <span class="confidence-bar-wrap">
+                <span class="confidence-bar" [style.width]="t.confidence + '%'" ></span>
+              </span>
+              <span class="confidence-num">{{ t.confidence }}%</span>
+            </div>
+            <div class="tech-evidence">🔍 {{ t.evidence }}</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" *ngIf="results.length === 0 && !loading">
+      <span class="empty-icon">🌐</span>
+      <p>Introdu domenii și apasă Analizează</p>
+    </div>
+
+  </main>
+</div>
